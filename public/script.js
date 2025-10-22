@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const recipeGrid = document.getElementById('recipe-grid');
     const form = document.getElementById('add-recipe-form');
-    let allRecipes = []; // This will hold the master list of all recipes
-    let displayedRecipes = []; // This will hold the filtered list for display
+    let allRecipes = []; 
+    let displayedRecipes = []; 
 
     // Modal elements
     const editModal = document.getElementById('edit-modal');
@@ -46,21 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const getPlatformIcon = (url) => {
         if (!url) return '';
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
-            // Removed YouTube icon as per request
             return ''; 
         }
         if (url.includes('instagram.com')) {
-            // Removed Instagram icon as per request
             return '';
         }
         if (url.includes('tiktok.com')) {
-            // Removed TikTok icon as per request
             return '';
         }
         return '';
     };
 
-    // --- Core Functions ---
 
     const displayRecipes = (recipes) => {
         recipeGrid.innerHTML = ''; // Clear existing recipes
@@ -70,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Create a reversed copy to display newest recipes first
+
         const recipesToDisplay = [...recipes].reverse();
 
         recipesToDisplay.forEach(recipe => {
@@ -105,14 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (platform) platforms.add(platform);
         });
 
-        platformFilter.innerHTML = '<option value="">All Platforms</option>'; // Reset
+        platformFilter.innerHTML = '<option value="">All Platforms</option>'; 
         platforms.forEach(platform => {
             const option = document.createElement('option');
             option.value = platform;
-            option.textContent = platform.charAt(0).toUpperCase() + platform.slice(1); // Capitalize
+            option.textContent = platform.charAt(0).toUpperCase() + platform.slice(1); 
             platformFilter.appendChild(option);
         });
-        // Restore selected value if it was set
         platformFilter.value = platformFilter.dataset.selectedValue || '';
     };
 
@@ -138,8 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Could not load recipes. Is the server running?');
             }
             allRecipes = await response.json();
-            populatePlatformFilter(allRecipes); // Populate filters from the full list
-            applyFilters(); // Apply any active filters and display
+            populatePlatformFilter(allRecipes); 
+            applyFilters(); 
         } catch (error) {
             console.error('Fetch error:', error);
             recipeGrid.innerHTML = `<p style="color: red;">${error.message}</p>`;
@@ -160,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to add recipe');
 
-            allRecipes = await response.json(); // Server sends back the full updated list
+            allRecipes = await response.json(); 
             applyFilters();
             form.reset();
         } catch (error) {
@@ -205,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to delete recipe.');
 
-            allRecipes = await response.json(); // Server sends back the updated list
+            allRecipes = await response.json();
             applyFilters();
         } catch (error) {
             console.error('Error deleting recipe:', error);
@@ -219,24 +214,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isCustom = 'ingredients' in recipeToEdit;
 
-        // Show/hide fields based on recipe type
+
         editForm.querySelector('[data-recipe-type="custom"]').style.display = isCustom ? 'flex' : 'none';
         editForm.querySelector('[data-recipe-type="link"]').style.display = isCustom ? 'none' : 'flex';
 
-        // Populate the form in the modal
+
         editForm.querySelector('#edit-id').value = recipeToEdit.id;
         editForm.querySelector('#edit-title').value = recipeToEdit.title;
         editForm.querySelector('#edit-thumbnail').value = recipeToEdit.thumbnail;
 
         if (isCustom) {
             editForm.querySelector('#edit-ingredients').value = recipeToEdit.ingredients || '';
-            // Clear link-recipe fields
+
             editForm.querySelector('#edit-link').value = '';
             editForm.querySelector('#edit-category').value = '';
         } else {
             editForm.querySelector('#edit-link').value = recipeToEdit.link || '';
             editForm.querySelector('#edit-category').value = recipeToEdit.category || '';
-            // Clear custom-recipe fields
+
             editForm.querySelector('#edit-ingredients').value = '';
         }
         
@@ -257,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         viewRecipeIngredients.textContent = recipeToView.ingredients;
         viewRecipeModal.style.display = 'flex';
 
-        // Add a listener to the close button for this specific modal
+
         viewRecipeModal.querySelector('.close-button').onclick = () => viewRecipeModal.style.display = 'none';
     };
 
@@ -267,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = formData.get('id');
         let updatedRecipe = Object.fromEntries(formData.entries());
 
-        // Clean up the object before sending
+
         if (updatedRecipe.ingredients === '') {
             delete updatedRecipe.ingredients;
         } else {
@@ -284,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to update recipe.');
 
-            allRecipes = await response.json(); // Server sends back the updated list
+            allRecipes = await response.json(); 
             applyFilters();
             closeEditModal();
         } catch (error) {
@@ -293,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Event Listeners ---
+
     form.addEventListener('submit', addRecipe);
     editForm.addEventListener('submit', handleEditSubmit);
     closeModalButton.addEventListener('click', closeEditModal);
@@ -301,28 +296,30 @@ document.addEventListener('DOMContentLoaded', () => {
     closeCustomRecipeModalBtn.addEventListener('click', () => customRecipeModal.style.display = 'none');
     customRecipeForm.addEventListener('submit', addCustomRecipe);
 
-    // Use event delegation for edit/delete buttons
-    recipeGrid.addEventListener('click', (event) => { // Changed from 'buttons' to 'icons'
+
+    recipeGrid.addEventListener('click', (event) => { 
+
         const target = event.target;
         const id = parseInt(target.dataset.id, 10);
         if (target.classList.contains('delete-icon')) {
-            event.preventDefault(); // Stop the link from opening
-            event.stopPropagation(); // Stop the event from bubbling up
+            event.preventDefault(); 
+            event.stopPropagation(); 
+
             handleDelete(id);
         } else if (target.classList.contains('edit-icon')) {
-            event.preventDefault(); // Stop the link from opening
-            event.stopPropagation(); // Stop the event from bubbling up
+            event.preventDefault(); 
+            event.stopPropagation(); 
             openEditModal(id);
         } else if (target.closest('[data-action="view-custom"]')) {
-            event.preventDefault(); // Stop the link from opening
+            event.preventDefault(); 
             const customRecipeId = parseInt(target.closest('[data-action="view-custom"]').dataset.id, 10);
             openViewModal(customRecipeId);
         }
     });
 
-    // Filter event listeners
+
     platformFilter.addEventListener('change', () => {
-        platformFilter.dataset.selectedValue = platformFilter.value; // Store selected value
+        platformFilter.dataset.selectedValue = platformFilter.value; 
         applyFilters();
     });
     searchInput.addEventListener('input', () => {
@@ -330,10 +327,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     categoryFilter.addEventListener('change', () => {
-        categoryFilter.dataset.selectedValue = categoryFilter.value; // Store selected value
-        applyFilters();
+        categoryFilter.dataset.selectedValue = categoryFilter.value; 
     });
 
-    // --- Initial Load ---
+
     fetchRecipes();
 });

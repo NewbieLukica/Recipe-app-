@@ -2,6 +2,8 @@
 
 A simple web application to store, view, edit, and filter a personal recipe collection. Recipes can be added from a link or as a custom entry with ingredients.
 
+This app was made using the Gemini code assist the app is made purely for fun and personal use, feel free to use it, I will bbe addig more features and stuff to it when I learn how to do things properly, thanks for the understanding c:
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed on your new PC:

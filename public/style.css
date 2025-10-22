@@ -88,6 +88,16 @@ header h1 {
     margin-bottom: 30px;
 }
 
+.filter-controls input[type="text"] {
+    flex: 2; /* Allow search input to take more space */
+    min-width: 200px;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: #e0e0e0;
+}
+
 .filter-controls {
     display: flex;
     gap: 15px;

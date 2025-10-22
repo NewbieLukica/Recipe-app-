@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Filter elements
     const platformFilter = document.getElementById('platform-filter');
+    const searchInput = document.getElementById('search-input');
     const categoryFilter = document.getElementById('category-filter');
 
 
@@ -118,13 +119,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyFilters = () => {
         const selectedPlatform = platformFilter.value;
         const selectedCategory = categoryFilter.value;
+        const searchTerm = searchInput.value.toLowerCase();
 
         displayedRecipes = allRecipes.filter(recipe => {
             const platformMatch = !selectedPlatform || getPlatform(recipe.link) === selectedPlatform;
             const categoryMatch = !selectedCategory || recipe.category === selectedCategory;
-            return platformMatch && categoryMatch;
+            const searchMatch = !searchTerm || recipe.title.toLowerCase().includes(searchTerm);
+            return platformMatch && categoryMatch && searchMatch;
         });
-
+        
         displayRecipes(displayedRecipes);
     };
 
@@ -322,6 +325,10 @@ document.addEventListener('DOMContentLoaded', () => {
         platformFilter.dataset.selectedValue = platformFilter.value; // Store selected value
         applyFilters();
     });
+    searchInput.addEventListener('input', () => {
+        applyFilters();
+    });
+
     categoryFilter.addEventListener('change', () => {
         categoryFilter.dataset.selectedValue = categoryFilter.value; // Store selected value
         applyFilters();

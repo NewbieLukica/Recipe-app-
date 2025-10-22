@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon.png" type="image/png">
+    <title>Recipe Collection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Recipe Collection</h1>
+        </header>
+
+        <section class="add-recipe-section">
+            <div class="section-header">
+                <h2>Add a New Recipe</h2>
+                <button id="open-custom-recipe-modal-btn" class="custom-recipe-btn">Add a Custom Recipe</button>
+            </div>
+            <form id="add-recipe-form">
+                <input type="text" id="title" name="title" placeholder="Recipe Title" required>
+                <input type="url" id="link" name="link" placeholder="Link to Recipe (e.g., YouTube, TikTok)">
+                <input type="url" id="thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image" required>
+                <select id="category" name="category" required>
+                    <option value="" disabled selected>Select a Category</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="soup">Soup</option>
+                    <option value="stews">Stews</option>
+                    <option value="sweets">Sweets</option>
+                    <option value="other">Other</option>
+                </select>
+                <button type="submit">Add Recipe</button>
+            </form>
+        </section>
+
+        <section class="filter-section">
+            <h2>Filter Recipes</h2>
+            <div class="filter-controls">
+                <select id="platform-filter">
+                    <option value="">All Platforms</option>
+                    <!-- Platform options will be populated by JavaScript -->
+                </select>
+                <select id="category-filter">
+                    <option value="">All Categories</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="soup">Soup</option>
+                    <option value="stews">Stews</option>
+                    <option value="sweets">Sweets</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+        </section>
+
+        <main id="recipe-grid">
+            <!-- Recipes will be loaded here by JavaScript -->
+        </main>
+
+        <!-- Edit Recipe Modal -->
+        <div id="edit-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Edit Recipe</h2>
+                <form id="edit-recipe-form">
+                    <input type="hidden" id="edit-id" name="id">
+                    <input type="text" id="edit-title" name="title" placeholder="Recipe Name" required>
+                    <input type="url" id="edit-thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image" required>
+
+                    <div class="form-field-group" data-recipe-type="link">
+                        <input type="url" id="edit-link" name="link" placeholder="Link to Recipe">
+                        <select id="edit-category" name="category">
+                            <option value="" disabled>Select a Category</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="soup">Soup</option>
+                            <option value="stews">Stews</option>
+                            <option value="sweets">Sweets</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-field-group" data-recipe-type="custom">
+                        <textarea id="edit-ingredients" name="ingredients" placeholder="Enter ingredients and steps..." rows="8"></textarea>
+                    </div>
+                    <button type="submit">Save Changes</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Custom Recipe Modal -->
+        <div id="custom-recipe-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Add Your Custom Recipe</h2>
+                <form id="custom-recipe-form">
+                    <input type="text" id="custom-title" name="title" placeholder="Recipe Name" required>
+                    <input type="url" id="custom-thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image" required>
+                    <textarea id="custom-ingredients" name="ingredients" placeholder="Enter ingredients and steps..." rows="8" required></textarea>
+                    <button type="submit">Save Custom Recipe</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Custom Recipe Modal -->
+        <div id="view-recipe-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content view-modal-content">
+                <span class="close-button">&times;</span>
+                <img id="view-recipe-thumbnail" src="" alt="Recipe Image" class="view-modal-thumbnail">
+                <div class="view-modal-text-content">
+                    <h2 id="view-recipe-title"></h2>
+                    <div id="view-recipe-ingredients" class="recipe-ingredients-view">
+                        <!-- Ingredients will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

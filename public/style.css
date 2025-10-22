@@ -1,0 +1,381 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #121212; /* Dark background */
+    color: #e0e0e0; /* Light text */
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header h1 {
+    text-align: center;
+    color: #2a9d8f;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.custom-recipe-btn {
+    background-color: #e9c46a;
+    color: #1e1e1e;
+    font-weight: bold;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.custom-recipe-btn:hover {
+    background-color: #f4d37a;
+}
+
+.add-recipe-section {
+    background-color: #1e1e1e; /* Slightly lighter dark for sections */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    margin-bottom: 30px;
+}
+
+#add-recipe-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: center;
+}
+
+#add-recipe-form input,
+#add-recipe-form select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444; /* Darker border */
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #333; /* Dark input background */
+    color: #e0e0e0; /* Light input text */
+}
+
+#add-recipe-form button {
+    background-color: #2a9d8f;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+#add-recipe-form button:hover {
+    background-color: #264653;
+}
+
+.filter-section {
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    margin-bottom: 30px;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap; /* Allow filters to wrap on smaller screens */
+}
+
+.filter-controls select {
+    flex: 1; /* Allow selects to grow and shrink */
+    min-width: 150px; /* Minimum width for readability */
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+#recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.recipe-card {
+    background-color: #1e1e1e; /* Slightly lighter dark for cards */
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
+}
+
+.recipe-card:hover {
+    transform: translateY(-5px);
+}
+
+.recipe-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.recipe-card .recipe-image-wrapper {
+    display: block; /* Make the link a block-level element */
+    position: relative; /* For positioning icons absolutely within it */
+    text-decoration: none; /* Remove underline from link */
+    color: inherit; /* Inherit text color */
+}
+
+.recipe-card-content {
+    padding: 15px;
+}
+
+.recipe-card-content h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    display: flex; /* Allow title and category to be on the same line */
+    align-items: center;
+    justify-content: space-between; /* Pushes title and category apart */
+    gap: 8px; /* Space between title and category */
+}
+
+.recipe-title {
+    /* Prevent long titles from pushing the category tag off-screen */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipe-category {
+    background-color: #264653; /* A slightly darker shade for the category tag */
+    color: #e0e0e0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+/* Action Icons (Edit/Delete) */
+.action-icon {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
+    color: white;
+    padding: 6px;
+    border-radius: 50%; /* Make it round */
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 10; /* Ensure it's above the image */
+    transition: background-color 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; /* Fixed width/height for a square icon */
+    height: 24px;
+    text-align: center;
+    line-height: 1; /* Adjust line height for vertical centering of text icons */
+}
+
+.action-icon:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+}
+
+.edit-icon {
+    top: 10px;
+    left: 10px;
+    background-color: rgba(233, 196, 106, 0.85); /* Transparent yellow for edit */
+    color: #1e1e1e;
+}
+
+.delete-icon {
+    top: 10px;
+    right: 10px;
+    background-color: rgba(231, 111, 81, 0.85); /* Transparent red for delete */
+    color: white;
+}
+
+/* Remove old button styles */
+.card-buttons,
+.card-button,
+.edit-btn,
+.delete-btn {
+    /* These elements are no longer generated by JS, but hiding them ensures no visual glitches if they somehow appear */
+    display: none !important;
+    border: none;
+}
+
+/* Edit Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #1e1e1e;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-button:hover {
+    color: #fff;
+}
+
+#edit-recipe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Add spacing between form elements */
+}
+
+/* Apply consistent styling to inputs and select in the edit modal */
+#edit-recipe-form input,
+#edit-recipe-form select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+/* Style the submit button in the edit modal */
+#edit-recipe-form button {
+    background-color: #e9c46a; /* Yellow to match the edit button */
+    color: #1e1e1e;
+    font-weight: bold;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px; /* Add some space above the button */
+    transition: background-color 0.3s;
+}
+
+#edit-recipe-form button:hover {
+    background-color: #f4d37a;
+}
+
+/* Group for conditional fields in edit form */
+.form-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Apply consistent styling to inputs in the custom recipe modal */
+#custom-recipe-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+/* Style the new textarea in the edit modal */
+#edit-recipe-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #333;
+    color: #e0e0e0;
+    font-family: inherit;
+    resize: vertical;
+}
+
+/* Style the textarea in the custom recipe modal */
+#custom-recipe-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #333;
+    color: #e0e0e0;
+    font-family: inherit; /* Use the same font as the rest of the page */
+    resize: vertical; /* Allow vertical resizing */
+}
+
+#custom-recipe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Style the submit button in the custom recipe modal */
+#custom-recipe-form button {
+    background-color: #2a9d8f;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+#custom-recipe-form button:hover {
+    background-color: #264653;
+}
+
+/* Styles for the ingredients view in the modal */
+.recipe-ingredients-view {
+    margin-top: 20px;
+    white-space: pre-wrap; /* Respects newlines and spaces */
+    line-height: 1.6;
+}
+
+/* Specific styles for the view modal to accommodate the image */
+.modal-content.view-modal-content {
+    padding: 0; /* Remove padding from the main container */
+}
+
+.view-modal-thumbnail {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0; /* Round top corners */
+    display: block; /* Remove bottom space under the image */
+}
+
+.view-modal-text-content {
+    padding: 20px 30px 30px; /* Add padding back to the text part */
+}

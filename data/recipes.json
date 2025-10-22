@@ -26,5 +26,33 @@
     "link": "https://www.instagram.com/p/DEiDGM5IaeY",
     "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmG3HbdQGQbiO8YOkGZ0dBZc8PbNVz_i6D0w&s",
     "category": "soup"
+  },
+  {
+    "id": 1761171438203,
+    "title": "Potato stew",
+    "link": "https://www.tiktok.com/@veganerwandel/video/7467261316957277462",
+    "thumbnail": "https://www.allrecipes.com/thmb/z0n0NVC4FoLSPzOM0TVE6q3bP90=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/ALR-25665-baked-potato-soup-v-VAT-2x1-05365b10f2564e749eb73159e39d65b7.jpg",
+    "category": "stews"
+  },
+  {
+    "id": 1761171562014,
+    "title": "cream chicken njoki stew",
+    "link": "https://www.instagram.com/p/DOybkebkcaw",
+    "thumbnail": "https://www.saltandlavender.com/wp-content/uploads/2022/05/creamy-tuscan-chicken-gnocchi-soup-1.jpg",
+    "category": "stews"
+  },
+  {
+    "id": 1761171609168,
+    "title": "Baguette",
+    "link": "https://www.instagram.com/p/DNTnVoatgem",
+    "thumbnail": "https://piovariations.cdn.podravka.net/aadf7d7c-6380-11eb-86ff-0242ac120039/v/f2b1f6a6-64bc-11eb-b6c2-0242ac130010/1024x768-f2b21802-64bc-11eb-a115-0242ac130010.webp",
+    "category": "other"
+  },
+  {
+    "id": 1761172234468,
+    "title": "Pasta",
+    "link": "https://www.tiktok.com/@jujumaoo/video/7562534503437192469",
+    "thumbnail": "https://putnikofer.hr/wp-content/uploads/2024/11/pasta-suta.jpg",
+    "category": "lunch"
   }
 ]

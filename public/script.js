@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const platformFilter = document.getElementById('platform-filter');
     const searchInput = document.getElementById('search-input');
     const categoryFilter = document.getElementById('category-filter');
+    const sortFilter = document.getElementById('sort-filter');
+    const randomRecipeBtn = document.getElementById('random-recipe-btn');
 
 
     // --- Helper Functions ---
@@ -66,10 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-
-        const recipesToDisplay = [...recipes].reverse();
-
-        recipesToDisplay.forEach(recipe => {
+        recipes.forEach(recipe => {
             const card = document.createElement('div');
             card.className = 'recipe-card';
 
@@ -115,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedPlatform = platformFilter.value;
         const selectedCategory = categoryFilter.value;
         const searchTerm = searchInput.value.toLowerCase();
+        const sortValue = sortFilter.value;
 
         displayedRecipes = allRecipes.filter(recipe => {
             const platformMatch = !selectedPlatform || getPlatform(recipe.link) === selectedPlatform;
@@ -122,6 +122,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const searchMatch = !searchTerm || recipe.title.toLowerCase().includes(searchTerm);
             return platformMatch && categoryMatch && searchMatch;
         });
+
+        // Sort the filtered recipes
+        if (sortValue === 'newest') {
+            // Newest first (descending by id/timestamp)
+            displayedRecipes.sort((a, b) => b.id - a.id);
+        } else if (sortValue === 'oldest') {
+            // Oldest first (ascending by id/timestamp)
+            displayedRecipes.sort((a, b) => a.id - b.id);
+        }
+        // 'default' will keep the natural order from the server (which is oldest to newest)
         
         displayRecipes(displayedRecipes);
     };
@@ -133,6 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Could not load recipes. Is the server running?');
             }
             allRecipes = await response.json();
+            // Default sort: newest to oldest
+            allRecipes.sort((a, b) => b.id - a.id);
             populatePlatformFilter(allRecipes); 
             applyFilters(); 
         } catch (error) {
@@ -330,6 +342,29 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     });
 
+    sortFilter.addEventListener('change', () => {
+        applyFilters();
+    });
+
+    randomRecipeBtn.addEventListener('click', () => {
+        if (displayedRecipes.length === 0) {
+            alert('No recipes to choose from. Try adjusting your filters!');
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * displayedRecipes.length);
+        const randomRecipe = displayedRecipes[randomIndex];
+
+        const isCustom = 'ingredients' in randomRecipe;
+
+        if (isCustom) {
+            openViewModal(randomRecipe.id);
+        } else if (randomRecipe.link) {
+            window.open(randomRecipe.link, '_blank');
+        } else {
+            alert(`Here is your random recipe: ${randomRecipe.title}`);
+        }
+    });
 
     fetchRecipes();
 });

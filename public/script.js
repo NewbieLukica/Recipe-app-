@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     categoryFilter.addEventListener('change', () => {
-        categoryFilter.dataset.selectedValue = categoryFilter.value; 
+        applyFilters();
     });
 
 

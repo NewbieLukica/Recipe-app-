@@ -23,8 +23,11 @@ const readRecipesFromBlob = async (retries = 3, delay = 1000) => {
             // This is more reliable than `list` with a prefix for a single file.
             const blob = await head(RECIPES_BLOB_KEY);
             
-            // Use downloadUrl to bypass the CDN cache and get the latest version directly.
-            const response = await fetch(blob.downloadUrl, { cache: 'no-store' });
+            // To ensure we get the latest version and bypass any caches,
+            // we'll fetch from the blob's primary URL and add a unique query
+            // parameter (cache buster) to the request.
+            const cacheBuster = `?v=${Date.now()}`;
+            const response = await fetch(`${blob.url}${cacheBuster}`);
 
             if (response.ok) {
                 return await response.json();

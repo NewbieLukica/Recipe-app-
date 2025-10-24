@@ -25,7 +25,8 @@ const readRecipesFromBlob = async (retries = 3, delay = 1000) => {
             }
 
             const blob = blobList.blobs[0];
-            const response = await fetch(blob.url, { cache: 'no-store' }); // Disable caching
+            // Use downloadUrl to bypass the CDN cache and get the latest version directly.
+            const response = await fetch(blob.downloadUrl, { cache: 'no-store' });
 
             if (response.ok) {
                 return await response.json();

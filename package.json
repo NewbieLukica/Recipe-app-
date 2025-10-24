@@ -10,6 +10,7 @@
   "author": "Sp4nky",
   "license": "ISC",
   "dependencies": {
+    "@vercel/blob": "^2.0.0",
     "express": "^4.19.2"
   }
 }

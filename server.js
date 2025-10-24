@@ -82,11 +82,10 @@ const isVercel = process.env.BLOB_READ_WRITE_TOKEN;
 const readRecipes = isVercel ? readRecipesFromBlob : readRecipesFromLocalFile;
 const writeRecipes = isVercel ? writeRecipesToBlob : writeRecipesToLocalFile;
 
-/**
- * A robust function to handle read-modify-write operations on the blob storage,
- * preventing race conditions. It will retry the operation if the data changes
- * during the process.
- */
+// A robust function to handle read-modify-write operations on the blob storage.
+// For Vercel Blob, we rely on readRecipes's internal retries to get the latest data
+// before modification, and trust writeRecipes to perform the update.
+// The immediate read-back verification loop was causing issues due to eventual consistency.
 const performLockedUpdate = async (updateFunction) => {
     if (!isVercel) {
         // For local files, race conditions are not an issue.
@@ -96,21 +95,17 @@ const performLockedUpdate = async (updateFunction) => {
         return updatedRecipes;
     }
 
-    // For Vercel, we implement a retry loop to handle eventual consistency.
-    for (let i = 0; i < 5; i++) { // Try up to 5 times
+    // For Vercel, perform a read-modify-write.
+    // readRecipes already includes retry logic to fetch the most recent data.
+    try {
         const recipes = await readRecipes();
         const updatedRecipes = updateFunction(recipes);
         await writeRecipes(updatedRecipes);
-        // Immediately read back to verify our write.
-        const writtenRecipes = await readRecipes();
-        if (JSON.stringify(writtenRecipes) === JSON.stringify(updatedRecipes)) {
-            return updatedRecipes; // Success!
-        }
-        // If not, wait a bit and retry the whole operation.
-        await new Promise(resolve => setTimeout(resolve, 750));
+        return updatedRecipes;
+    } catch (error) {
+        console.error('Error in performLockedUpdate (Vercel mode):', error);
+        throw new Error("Failed to update recipes due to a storage issue. Please try again.");
     }
-
-    throw new Error("Failed to update recipes due to data consistency issues. Please try again.");
 };
 
 app.get('/api/recipes', async (req, res) => {
@@ -144,18 +139,19 @@ app.put('/api/recipes/:id', async (req, res) => {
         const idToUpdate = parseInt(req.params.id, 10);
         const updatedRecipes = await performLockedUpdate((recipes) => {
             const recipeIndex = recipes.findIndex(recipe => recipe.id === idToUpdate);
-            if (recipeIndex === -1) {
-                // This will be caught by the outer try/catch and result in a 500.
-                // A 404 would be better, but this is a rare edge case.
-                throw new Error('Recipe not found during update.');
+            if (recipeIndex === -1) { // If recipe not found, throw a specific error
+                const error = new Error('Recipe not found.');
+                error.statusCode = 404; // Custom property to identify the error type
+                throw error;
             }
             recipes[recipeIndex] = { ...recipes[recipeIndex], ...req.body, id: idToUpdate };
             return recipes;
         });
         res.status(200).json(updatedRecipes);
     } catch (error) {
-        console.error('PUT /api/recipes/:id - Error:', error);
-        res.status(500).send('Error updating recipe.');
+        console.error('PUT /api/recipes/:id - Error:', error); // Log the error for debugging
+        if (error.statusCode === 404) return res.status(404).send(error.message); // Return 404 for not found
+        res.status(500).send('Error updating recipe.'); // Generic 500 for other errors
     }
 });
 

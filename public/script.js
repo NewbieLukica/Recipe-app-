@@ -155,8 +155,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addRecipe = async (event) => {
         event.preventDefault();
-        const formData = new FormData(form);
-        const newRecipe = Object.fromEntries(formData.entries());
+        const newRecipeData = Object.fromEntries(new FormData(form).entries());
+        const tempId = Date.now(); // Create a temporary ID for optimistic update
+        const newRecipe = { id: tempId, ...newRecipeData };
+
+        // Optimistic UI update
+        allRecipes.unshift(newRecipe); // Add to the start of the array
+        applyFilters();
+        form.reset();
 
         try {
             const response = await fetch('/api/recipes', {
@@ -167,11 +173,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to add recipe');
 
-            // The server now sends back the full, updated list.
-            allRecipes = await response.json();
-            allRecipes.sort((a, b) => b.id - a.id); // Re-sort after adding
-            applyFilters();
-            form.reset();
+            // Replace the temporary recipe with the final one from the server
+            const finalRecipe = await response.json();
+            const index = allRecipes.findIndex(r => r.id === tempId);
+            if (index !== -1) allRecipes[index] = finalRecipe;
+            applyFilters(); // Re-render to be safe
         } catch (error) {
             console.error('Error adding recipe:', error);
             alert('There was an error adding your recipe. Please try again.');
@@ -180,8 +186,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addCustomRecipe = async (event) => {
         event.preventDefault();
-        const formData = new FormData(customRecipeForm);
-        const newRecipe = Object.fromEntries(formData.entries());
+        const newRecipeData = Object.fromEntries(new FormData(customRecipeForm).entries());
+        const tempId = Date.now();
+        const newRecipe = { id: tempId, ...newRecipeData };
+
+        // Optimistic UI update
+        allRecipes.unshift(newRecipe);
+        applyFilters();
+        customRecipeForm.reset();
+        customRecipeModal.style.display = 'none';
 
         try {
             const response = await fetch('/api/recipes', {
@@ -192,11 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to add custom recipe');
 
-            allRecipes = await response.json(); // Get the full updated list
-            allRecipes.sort((a, b) => b.id - a.id); // Re-sort
-            applyFilters();
-            customRecipeForm.reset();
-            customRecipeModal.style.display = 'none';
+            // Replace the temporary recipe with the final one from the server
+            const finalRecipe = await response.json();
+            const index = allRecipes.findIndex(r => r.id === tempId);
+            if (index !== -1) allRecipes[index] = finalRecipe;
+            applyFilters(); // Re-render
         } catch (error) {
             console.error('Error adding custom recipe:', error);
             alert('There was an error adding your custom recipe. Please try again.');
@@ -208,6 +221,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Optimistic UI update
+        allRecipes = allRecipes.filter(recipe => recipe.id !== id);
+        applyFilters();
+
         try {
             const response = await fetch(`/api/recipes/${id}`, {
                 method: 'DELETE',
@@ -215,9 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to delete recipe.');
 
-            allRecipes = await response.json(); // Get the full updated list
-            allRecipes.sort((a, b) => b.id - a.id); // Re-sort
-            applyFilters();
+            // No need to do anything on success, UI is already updated.
         } catch (error) {
             console.error('Error deleting recipe:', error);
             alert('There was an error deleting the recipe.');
@@ -278,27 +293,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = formData.get('id');
         let updatedRecipe = Object.fromEntries(formData.entries());
 
-
         if (updatedRecipe.ingredients === '') {
             delete updatedRecipe.ingredients;
         } else {
             delete updatedRecipe.link;
             delete updatedRecipe.category;
         }
+        
+        // Optimistic UI update
+        const recipeIndex = allRecipes.findIndex(r => r.id === parseInt(id, 10));
+        if (recipeIndex !== -1) {
+            allRecipes[recipeIndex] = { ...allRecipes[recipeIndex], ...updatedRecipe };
+        }
+        applyFilters();
+        closeEditModal();
 
         try {
             const response = await fetch(`/api/recipes/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedRecipe),
+                body: JSON.stringify(updatedRecipe), // Send the cleaned-up recipe
             });
 
             if (!response.ok) throw new Error('Failed to update recipe.');
-
-            allRecipes = await response.json(); // Get the full updated list
-            allRecipes.sort((a, b) => b.id - a.id); // Re-sort
-            applyFilters();
-            closeEditModal();
+            
+            // Optionally, update the local recipe with the final one from the server
+            const finalRecipe = await response.json();
+            if (recipeIndex !== -1) allRecipes[recipeIndex] = finalRecipe;
+            applyFilters(); // Re-render to be safe
         } catch (error) {
             console.error('Error updating recipe:', error);
             alert('There was an error updating the recipe.');

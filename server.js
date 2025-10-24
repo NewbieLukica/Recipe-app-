@@ -106,7 +106,8 @@ app.post('/api/recipes', async (req, res) => {
         };
         recipes.push(newRecipe);
         await writeRecipes(recipes);
-        res.status(201).json(recipes); 
+        // Return only the new recipe that was created.
+        res.status(201).json(newRecipe); 
     } catch (error) {
         console.error('POST /api/recipes - Error:', error);
         res.status(500).send('Error saving new recipe.');
@@ -128,8 +129,8 @@ app.put('/api/recipes/:id', async (req, res) => {
         recipes[recipeIndex] = updatedRecipe;
 
         await writeRecipes(recipes);
-        // Return the full list to keep the client simple
-        res.status(200).json(recipes);
+        // Return only the updated recipe.
+        res.status(200).json(updatedRecipe);
     } catch (error) {
         console.error('PUT /api/recipes/:id - Error:', error);
         res.status(500).send('Error updating recipe.');
@@ -143,7 +144,8 @@ app.delete('/api/recipes/:id', async (req, res) => {
         const updatedRecipes = recipes.filter(recipe => recipe.id !== idToDelete);
 
         await writeRecipes(updatedRecipes);
-        res.status(200).json(updatedRecipes); 
+        // On success, just send back a success status.
+        res.status(204).send(); 
     } catch (error) {
         console.error('DELETE /api/recipes/:id - Error:', error);
         res.status(500).send('Error deleting recipe.');

@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
-const { put, list } = require('@vercel/blob');
+const { put, head } = require('@vercel/blob');
 
 const app = express();
 const PORT = 3000;
@@ -19,12 +19,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 const readRecipesFromBlob = async (retries = 3, delay = 1000) => {
     for (let i = 0; i < retries; i++) {
         try {
-            const blobList = await list({ prefix: RECIPES_BLOB_KEY, limit: 1 });
-            if (blobList.blobs.length === 0) {
-                return []; // File doesn't exist yet, which is a valid state.
-            }
-
-            const blob = blobList.blobs[0];
+            // Use `head` to directly look up the blob by its exact pathname.
+            // This is more reliable than `list` with a prefix for a single file.
+            const blob = await head(RECIPES_BLOB_KEY);
+            
             // Use downloadUrl to bypass the CDN cache and get the latest version directly.
             const response = await fetch(blob.downloadUrl, { cache: 'no-store' });
 
@@ -35,6 +33,11 @@ const readRecipesFromBlob = async (retries = 3, delay = 1000) => {
             // If response is not OK, log it and retry.
             console.error(`Attempt ${i + 1}: Error fetching blob: ${response.statusText}`);
         } catch (error) {
+            // If the error is `BlobNotFoundError`, it means the file doesn't exist, which is a valid state.
+            if (error.constructor.name === 'BlobNotFoundError') {
+                console.log('Blob not found, returning empty array.');
+                return [];
+            }
             // If fetch itself fails, log it and retry.
             console.error(`Attempt ${i + 1}: Error reading from Vercel Blob:`, error);
         }

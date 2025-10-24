@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs').promises;
 const { put, list } = require('@vercel/blob');
 
 const app = express();
@@ -7,69 +8,66 @@ const PORT = 3000;
 
 // The name of the file in your Vercel Blob store.
 const RECIPES_BLOB_KEY = 'recipes.json';
+// The path to your local JSON file.
+const RECIPES_FILE_PATH = path.join(__dirname, 'data', 'recipes.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// --- Vercel Blob Storage Functions ---
 
-const readRecipesFromFile = async () => {
+const readRecipesFromBlob = async () => {
     try {
-        // Check if the blob exists
         const blobList = await list({ prefix: RECIPES_BLOB_KEY, limit: 1 });
         if (blobList.blobs.length === 0) {
-            // If the file doesn't exist in the blob store, return an empty array.
             return [];
         }
         const blob = blobList.blobs[0];
-        // Fetch the content from the blob's public URL
         const response = await fetch(blob.url);
         if (!response.ok) {
-            // If we can't fetch it for some reason, return an empty array to be safe.
             console.error(`Error fetching blob: ${response.statusText}`);
             return [];
         }
         return await response.json();
     } catch (error) {
         console.error('Error reading from Vercel Blob:', error);
-        // If any other error occurs, return an empty array to prevent the app from crashing.
         return [];
     }
 };
 
-const writeRecipesToFile = async (recipes) => {
+const writeRecipesToBlob = async (recipes) => {
     const body = JSON.stringify(recipes, null, 2);
-    // Upload the JSON string to Vercel Blob, making it publicly accessible.
     await put(RECIPES_BLOB_KEY, body, { access: 'public', addRandomSuffix: false });
 };
 
+// --- Local File Storage Functions ---
 
-
-const getPlatform = (url) => {
-    if (!url) return null;
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        return 'youtube';
+const readRecipesFromLocalFile = async () => {
+    try {
+        const data = await fs.readFile(RECIPES_FILE_PATH, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            return []; // File doesn't exist, return empty array
+        }
+        throw error;
     }
-    if (url.includes('instagram.com')) {
-        return 'instagram';
-    }
-    if (url.includes('tiktok.com')) {
-        return 'tiktok';
-    }
-    return null;
 };
+
+const writeRecipesToLocalFile = async (recipes) => {
+    await fs.writeFile(RECIPES_FILE_PATH, JSON.stringify(recipes, null, 2), 'utf8');
+};
+
+// --- Environment-aware Storage Functions ---
+
+const isVercel = process.env.BLOB_READ_WRITE_TOKEN;
+
+const readRecipes = isVercel ? readRecipesFromBlob : readRecipesFromLocalFile;
+const writeRecipes = isVercel ? writeRecipesToBlob : writeRecipesToLocalFile;
 
 app.get('/api/recipes', async (req, res) => {
     try {
-        let recipes = await readRecipesFromFile();
-        const filterPlatform = req.query.platform; 
-        const filterCategory = req.query.category; 
-
-        if (filterPlatform) {
-            recipes = recipes.filter(recipe => getPlatform(recipe.link) === filterPlatform);
-        }
-        if (filterCategory) {
-            recipes = recipes.filter(recipe => recipe.category === filterCategory);
-        }
+        const recipes = await readRecipes();
         res.json(recipes);
     } catch (error) {
         console.error('GET /api/recipes - Error:', error);
@@ -80,13 +78,13 @@ app.get('/api/recipes', async (req, res) => {
 
 app.post('/api/recipes', async (req, res) => {
     try {
-        const recipes = await readRecipesFromFile();
+        const recipes = await readRecipes();
         const newRecipe = {
             id: Date.now(), 
             ...req.body
         };
         recipes.push(newRecipe);
-        await writeRecipesToFile(recipes);
+        await writeRecipes(recipes);
         res.status(201).json(recipes); 
     } catch (error) {
         console.error('POST /api/recipes - Error:', error);
@@ -97,7 +95,7 @@ app.post('/api/recipes', async (req, res) => {
 
 app.put('/api/recipes/:id', async (req, res) => {
     try {
-        const recipes = await readRecipesFromFile();
+        const recipes = await readRecipes();
         const idToUpdate = parseInt(req.params.id, 10);
         const recipeIndex = recipes.findIndex(recipe => recipe.id === idToUpdate);
 
@@ -107,7 +105,7 @@ app.put('/api/recipes/:id', async (req, res) => {
 
         recipes[recipeIndex] = { ...recipes[recipeIndex], ...req.body, id: idToUpdate };
 
-        await writeRecipesToFile(recipes);
+        await writeRecipes(recipes);
         res.status(200).json(recipes); 
     } catch (error) {
         console.error('PUT /api/recipes/:id - Error:', error);
@@ -118,11 +116,11 @@ app.put('/api/recipes/:id', async (req, res) => {
 
 app.delete('/api/recipes/:id', async (req, res) => {
     try {
-        const recipes = await readRecipesFromFile();
+        const recipes = await readRecipes();
         const idToDelete = parseInt(req.params.id, 10);
         const updatedRecipes = recipes.filter(recipe => recipe.id !== idToDelete);
 
-        await writeRecipesToFile(updatedRecipes);
+        await writeRecipes(updatedRecipes);
         res.status(200).json(updatedRecipes); 
     } catch (error) {
         console.error('DELETE /api/recipes/:id - Error:', error);
@@ -131,5 +129,6 @@ app.delete('/api/recipes/:id', async (req, res) => {
 });
 
 app.listen(PORT, () => {
+    console.log(`Running in ${isVercel ? 'Vercel (production)' : 'local'} mode.`);
     console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -134,7 +134,10 @@ app.post('/api/recipes', async (req, res) => {
     try {
         let createdRecipe;
         await performLockedUpdate((recipes) => {
-            createdRecipe = { id: Date.now(), ...req.body };
+            // The client sends a temporary ID, which we will use.
+            // If the client didn't send one for some reason, we'd fall back, but it should.
+            const id = req.body.id || Date.now();
+            createdRecipe = { ...req.body, id };
             recipes.push(createdRecipe);
             return recipes;
         });

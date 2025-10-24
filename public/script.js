@@ -191,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newRecipe = { id: tempId, ...newRecipeData };
 
         // Optimistic UI update
+        const originalRecipes = [...allRecipes];
         allRecipes.unshift(newRecipe);
         applyFilters();
         customRecipeForm.reset();
@@ -213,6 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error adding custom recipe:', error);
             alert('There was an error adding your custom recipe. Please try again.');
+            // Revert optimistic update on failure
+            allRecipes = originalRecipes;
+            applyFilters();
         }
     };
 

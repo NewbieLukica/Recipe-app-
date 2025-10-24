@@ -16,23 +16,34 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // --- Vercel Blob Storage Functions ---
 
-const readRecipesFromBlob = async () => {
-    try {
-        const blobList = await list({ prefix: RECIPES_BLOB_KEY, limit: 1 });
-        if (blobList.blobs.length === 0) {
-            return [];
+const readRecipesFromBlob = async (retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const blobList = await list({ prefix: RECIPES_BLOB_KEY, limit: 1 });
+            if (blobList.blobs.length === 0) {
+                return []; // File doesn't exist yet, which is a valid state.
+            }
+
+            const blob = blobList.blobs[0];
+            const response = await fetch(blob.url, { cache: 'no-store' }); // Disable caching
+
+            if (response.ok) {
+                return await response.json();
+            }
+
+            // If response is not OK, log it and retry.
+            console.error(`Attempt ${i + 1}: Error fetching blob: ${response.statusText}`);
+        } catch (error) {
+            // If fetch itself fails, log it and retry.
+            console.error(`Attempt ${i + 1}: Error reading from Vercel Blob:`, error);
         }
-        const blob = blobList.blobs[0];
-        const response = await fetch(blob.url);
-        if (!response.ok) {
-            console.error(`Error fetching blob: ${response.statusText}`);
-            return [];
+        // Wait before the next attempt.
+        if (i < retries - 1) {
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
-        return await response.json();
-    } catch (error) {
-        console.error('Error reading from Vercel Blob:', error);
-        return [];
     }
+    console.error('Failed to read from Vercel Blob after all retries.');
+    return []; // Return empty array after all retries fail.
 };
 
 const writeRecipesToBlob = async (recipes) => {

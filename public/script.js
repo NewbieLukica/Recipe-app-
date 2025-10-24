@@ -167,7 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to add recipe');
 
-            allRecipes = await response.json(); 
+            // The server now sends back the full, updated list.
+            allRecipes = await response.json();
+            allRecipes.sort((a, b) => b.id - a.id); // Re-sort after adding
             applyFilters();
             form.reset();
         } catch (error) {
@@ -190,7 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to add custom recipe');
 
-            allRecipes = await response.json();
+            allRecipes = await response.json(); // Get the full updated list
+            allRecipes.sort((a, b) => b.id - a.id); // Re-sort
             applyFilters();
             customRecipeForm.reset();
             customRecipeModal.style.display = 'none';
@@ -212,7 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to delete recipe.');
 
-            allRecipes = await response.json();
+            allRecipes = await response.json(); // Get the full updated list
+            allRecipes.sort((a, b) => b.id - a.id); // Re-sort
             applyFilters();
         } catch (error) {
             console.error('Error deleting recipe:', error);
@@ -291,7 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) throw new Error('Failed to update recipe.');
 
-            allRecipes = await response.json(); 
+            allRecipes = await response.json(); // Get the full updated list
+            allRecipes.sort((a, b) => b.id - a.id); // Re-sort
             applyFilters();
             closeEditModal();
         } catch (error) {

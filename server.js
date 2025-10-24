@@ -120,16 +120,17 @@ app.put('/api/recipes/:id', async (req, res) => {
             return res.status(404).send('Recipe not found.');
         }
 
-        recipes[recipeIndex] = { ...recipes[recipeIndex], ...req.body, id: idToUpdate };
+        const updatedRecipe = { ...recipes[recipeIndex], ...req.body, id: idToUpdate };
+        recipes[recipeIndex] = updatedRecipe;
 
         await writeRecipes(recipes);
-        res.status(200).json(recipes); 
+        // Return the full list to keep the client simple
+        res.status(200).json(recipes);
     } catch (error) {
         console.error('PUT /api/recipes/:id - Error:', error);
         res.status(500).send('Error updating recipe.');
     }
 });
-
 
 app.delete('/api/recipes/:id', async (req, res) => {
     try {

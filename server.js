@@ -82,6 +82,37 @@ const isVercel = process.env.BLOB_READ_WRITE_TOKEN;
 const readRecipes = isVercel ? readRecipesFromBlob : readRecipesFromLocalFile;
 const writeRecipes = isVercel ? writeRecipesToBlob : writeRecipesToLocalFile;
 
+/**
+ * A robust function to handle read-modify-write operations on the blob storage,
+ * preventing race conditions. It will retry the operation if the data changes
+ * during the process.
+ */
+const performLockedUpdate = async (updateFunction) => {
+    if (!isVercel) {
+        // For local files, race conditions are not an issue.
+        const recipes = await readRecipes();
+        const updatedRecipes = updateFunction(recipes);
+        await writeRecipes(updatedRecipes);
+        return updatedRecipes;
+    }
+
+    // For Vercel, we implement a retry loop to handle eventual consistency.
+    for (let i = 0; i < 5; i++) { // Try up to 5 times
+        const recipes = await readRecipes();
+        const updatedRecipes = updateFunction(recipes);
+        await writeRecipes(updatedRecipes);
+        // Immediately read back to verify our write.
+        const writtenRecipes = await readRecipes();
+        if (JSON.stringify(writtenRecipes) === JSON.stringify(updatedRecipes)) {
+            return updatedRecipes; // Success!
+        }
+        // If not, wait a bit and retry the whole operation.
+        await new Promise(resolve => setTimeout(resolve, 750));
+    }
+
+    throw new Error("Failed to update recipes due to data consistency issues. Please try again.");
+};
+
 app.get('/api/recipes', async (req, res) => {
     try {
         const recipes = await readRecipes();
@@ -95,14 +126,12 @@ app.get('/api/recipes', async (req, res) => {
 
 app.post('/api/recipes', async (req, res) => {
     try {
-        const recipes = await readRecipes();
-        const newRecipe = {
-            id: Date.now(), 
-            ...req.body
-        };
-        recipes.push(newRecipe);
-        await writeRecipes(recipes);
-        res.status(201).json(recipes); 
+        const updatedRecipes = await performLockedUpdate((recipes) => {
+            const newRecipe = { id: Date.now(), ...req.body };
+            recipes.push(newRecipe);
+            return recipes;
+        });
+        res.status(201).json(updatedRecipes);
     } catch (error) {
         console.error('POST /api/recipes - Error:', error);
         res.status(500).send('Error saving new recipe.');
@@ -112,20 +141,18 @@ app.post('/api/recipes', async (req, res) => {
 
 app.put('/api/recipes/:id', async (req, res) => {
     try {
-        const recipes = await readRecipes();
         const idToUpdate = parseInt(req.params.id, 10);
-        const recipeIndex = recipes.findIndex(recipe => recipe.id === idToUpdate);
-
-        if (recipeIndex === -1) {
-            return res.status(404).send('Recipe not found.');
-        }
-
-        const updatedRecipe = { ...recipes[recipeIndex], ...req.body, id: idToUpdate };
-        recipes[recipeIndex] = updatedRecipe;
-
-        await writeRecipes(recipes);
-        // Return the full list to keep the client simple
-        res.status(200).json(recipes);
+        const updatedRecipes = await performLockedUpdate((recipes) => {
+            const recipeIndex = recipes.findIndex(recipe => recipe.id === idToUpdate);
+            if (recipeIndex === -1) {
+                // This will be caught by the outer try/catch and result in a 500.
+                // A 404 would be better, but this is a rare edge case.
+                throw new Error('Recipe not found during update.');
+            }
+            recipes[recipeIndex] = { ...recipes[recipeIndex], ...req.body, id: idToUpdate };
+            return recipes;
+        });
+        res.status(200).json(updatedRecipes);
     } catch (error) {
         console.error('PUT /api/recipes/:id - Error:', error);
         res.status(500).send('Error updating recipe.');
@@ -134,12 +161,11 @@ app.put('/api/recipes/:id', async (req, res) => {
 
 app.delete('/api/recipes/:id', async (req, res) => {
     try {
-        const recipes = await readRecipes();
         const idToDelete = parseInt(req.params.id, 10);
-        const updatedRecipes = recipes.filter(recipe => recipe.id !== idToDelete);
-
-        await writeRecipes(updatedRecipes);
-        res.status(200).json(updatedRecipes); 
+        const finalRecipes = await performLockedUpdate((recipes) => {
+            return recipes.filter(recipe => recipe.id !== idToDelete);
+        });
+        res.status(200).json(finalRecipes);
     } catch (error) {
         console.error('DELETE /api/recipes/:id - Error:', error);
         res.status(500).send('Error deleting recipe.');

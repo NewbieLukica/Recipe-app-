@@ -7,7 +7,7 @@ const app = express();
 const PORT = 3000;
 
 // The name of the file in your Vercel Blob store.
-const RECIPES_BLOB_KEY = 'recipes.json';
+const RECIPES_BLOB_KEY = 'web-recipes.json';
 // The path to your local JSON file.
 const RECIPES_FILE_PATH = path.join(__dirname, 'data', 'recipes.json');
 

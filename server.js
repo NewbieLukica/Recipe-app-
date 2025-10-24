@@ -1,42 +1,45 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
+const { put, list } = require('@vercel/blob');
 
 const app = express();
 const PORT = 3000;
 
-const DATA_DIR = path.join(__dirname, 'data');
-const RECIPES_FILE = path.join(DATA_DIR, 'recipes.json');
+// The name of the file in your Vercel Blob store.
+const RECIPES_BLOB_KEY = 'recipes.json';
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-const readRecipesFromFile = () => {
-    return new Promise((resolve, reject) => {
-        fs.readFile(RECIPES_FILE, 'utf8', (err, data) => {
-            if (err) {
-                if (err.code === 'ENOENT') {
-
-                    return resolve([]);
-                }
-
-                return reject(err);
-            }
-            try {
-
-                const recipes = data ? JSON.parse(data) : [];
-                resolve(recipes);
-            } catch (parseErr) {
-
-                reject(parseErr);
-            }
-        });
-    });
+const readRecipesFromFile = async () => {
+    try {
+        // Check if the blob exists
+        const blobList = await list({ prefix: RECIPES_BLOB_KEY, limit: 1 });
+        if (blobList.blobs.length === 0) {
+            // If the file doesn't exist in the blob store, return an empty array.
+            return [];
+        }
+        const blob = blobList.blobs[0];
+        // Fetch the content from the blob's public URL
+        const response = await fetch(blob.url);
+        if (!response.ok) {
+            // If we can't fetch it for some reason, return an empty array to be safe.
+            console.error(`Error fetching blob: ${response.statusText}`);
+            return [];
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error reading from Vercel Blob:', error);
+        // If any other error occurs, return an empty array to prevent the app from crashing.
+        return [];
+    }
 };
 
-const writeRecipesToFile = (recipes) => {
-    return fs.promises.writeFile(RECIPES_FILE, JSON.stringify(recipes, null, 2));
+const writeRecipesToFile = async (recipes) => {
+    const body = JSON.stringify(recipes, null, 2);
+    // Upload the JSON string to Vercel Blob, making it publicly accessible.
+    await put(RECIPES_BLOB_KEY, body, { access: 'public', addRandomSuffix: false });
 };
 
 
@@ -128,10 +131,5 @@ app.delete('/api/recipes/:id', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-
-    if (!fs.existsSync(DATA_DIR)){
-        fs.mkdirSync(DATA_DIR);
-        console.log(`Created data directory at: ${DATA_DIR}`);
-    }
     console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortFilter = document.getElementById('sort-filter');
     const randomRecipeBtn = document.getElementById('random-recipe-btn');
 
+    // Import/Export elements
+    const exportBtn = document.getElementById('export-recipes-btn');
+    const importBtn = document.getElementById('import-recipes-btn');
+    const importInput = document.getElementById('import-recipes-input');
+
 
     // --- Helper Functions ---
 
@@ -396,6 +401,70 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`Here is your random recipe: ${randomRecipe.title}`);
         }
     });
+
+    // --- Import/Export Functionality ---
+
+    const handleExport = () => {
+        if (displayedRecipes.length === 0) {
+            alert('No recipes to export. Try adjusting your filters!');
+            return;
+        }
+
+        // Create a blob with the currently displayed recipes
+        const blob = new Blob([JSON.stringify(displayedRecipes, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        // Create a temporary link to trigger the download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'recipes.json';
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImport = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedRecipes = JSON.parse(e.target.result);
+                if (!Array.isArray(importedRecipes)) {
+                    throw new Error('Invalid JSON format: must be an array of recipes.');
+                }
+
+                if (!confirm(`This will add ${importedRecipes.length} new recipe(s). Continue?`)) {
+                    return;
+                }
+
+                const response = await fetch('/api/recipes/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(importedRecipes),
+                });
+
+                if (!response.ok) throw new Error('Failed to import recipes.');
+
+                alert('Recipes imported successfully!');
+                fetchRecipes(); // Refresh the recipe list
+            } catch (error) {
+                console.error('Error importing recipes:', error);
+                alert(`Failed to import recipes: ${error.message}`);
+            } finally {
+                importInput.value = ''; // Reset input for next import
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    exportBtn.addEventListener('click', handleExport);
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', handleImport);
 
     fetchRecipes();
 });

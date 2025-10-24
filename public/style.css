@@ -406,3 +406,25 @@ header h1 {
 .view-modal-text-content {
     padding: 20px 30px 30px; 
 }
+
+.io-buttons .button {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    background-color: #4a4a4a;
+    color: #e0e0e0;
+    font-weight: bold;
+    border: 1px solid #555;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.io-buttons .button:hover {
+    background-color: #e0e0e0;
+    background-color: #5a5a5a;
+    border-color: #777;
+}

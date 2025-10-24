@@ -151,6 +151,31 @@ app.post('/api/recipes', async (req, res) => {
     }
 });
 
+app.post('/api/recipes/import', async (req, res) => {
+    try {
+        const recipesToImport = req.body;
+        if (!Array.isArray(recipesToImport)) {
+            return res.status(400).send('Invalid input: body must be an array of recipes.');
+        }
+
+        await performLockedUpdate((existingRecipes) => {
+            // Create a Set of existing IDs for quick lookup
+            const existingIds = new Set(existingRecipes.map(r => r.id));
+            recipesToImport.forEach(recipe => {
+                // Assign a new ID if it's missing or already exists
+                if (!recipe.id || existingIds.has(recipe.id)) {
+                    recipe.id = Date.now() + Math.random(); // Ensure uniqueness
+                }
+                existingRecipes.push(recipe);
+            });
+            return existingRecipes;
+        });
+        res.status(201).send('Recipes imported successfully.');
+    } catch (error) {
+        console.error('POST /api/recipes/import - Error:', error);
+        res.status(500).send('Error importing recipes.');
+    }
+});
 
 app.put('/api/recipes/:id', async (req, res) => {
     try {

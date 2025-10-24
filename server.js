@@ -77,7 +77,8 @@ const writeRecipesToLocalFile = async (recipes) => {
 
 // --- Environment-aware Storage Functions ---
 
-const isVercel = process.env.BLOB_READ_WRITE_TOKEN;
+// Use Vercel's official environment variable to detect production.
+const isVercel = process.env.VERCEL_ENV === 'production';
 
 const readRecipes = isVercel ? readRecipesFromBlob : readRecipesFromLocalFile;
 const writeRecipes = isVercel ? writeRecipesToBlob : writeRecipesToLocalFile;

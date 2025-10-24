@@ -48,7 +48,12 @@ const readRecipesFromBlob = async (retries = 3, delay = 1000) => {
 
 const writeRecipesToBlob = async (recipes) => {
     const body = JSON.stringify(recipes, null, 2);
-    await put(RECIPES_BLOB_KEY, body, { access: 'public', addRandomSuffix: false });
+    // We must allow overwrites because we are always updating the same file.
+    await put(RECIPES_BLOB_KEY, body, {
+        access: 'public',
+        addRandomSuffix: false,
+        allowOverwrite: true,
+    });
 };
 
 // --- Local File Storage Functions ---

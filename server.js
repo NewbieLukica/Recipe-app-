@@ -191,7 +191,7 @@ const logLogin = async (username) => {
     await writeLoginLogs(logs);
 };
 
-app.get('/api/last-logins', async (req, res) => {
+app.get('/logs', async (req, res) => {
     const logs = await readLoginLogs();
     res.json(logs);
 });

@@ -31,6 +31,9 @@ const auth = (req, res, next) => {
   next();
 };
 
+// Apply authentication to all routes
+app.use(auth);
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -141,9 +144,6 @@ const performLockedUpdate = async (updateFunction) => {
 
     throw new Error("Failed to update recipes due to high concurrency. Please try again.");
 };
-
-// Apply authentication to all routes below this line
-app.use(auth);
 
 app.get('/api/recipes', async (req, res) => {
     try {

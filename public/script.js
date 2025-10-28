@@ -33,6 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const importBtn = document.getElementById('import-recipes-btn');
     const importInput = document.getElementById('import-recipes-input');
 
+    // --- Recipe Count Display ---
+    const updateRecipeCountDisplay = () => {
+        const recipeCountElement = document.getElementById('recipe-count');
+        if (!recipeCountElement) return;
+
+        const total = allRecipes.length;
+        const showing = displayedRecipes.length;
+
+        if (total === showing || showing === 0) {
+            recipeCountElement.textContent = `Total Recipes: ${total}`;
+        } else {
+            recipeCountElement.textContent = `Showing ${showing} of ${total} recipes`;
+        }
+    };
 
     // --- Helper Functions ---
 
@@ -139,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 'default' will keep the natural order from the server (which is oldest to newest)
         
         displayRecipes(displayedRecipes);
+        updateRecipeCountDisplay();
     };
 
     const fetchRecipes = async () => {

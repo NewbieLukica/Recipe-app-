@@ -428,3 +428,11 @@ header h1 {
     background-color: #5a5a5a;
     border-color: #777;
 }
+
+.recipe-count-display {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: #a0a0a0;
+    font-weight: 500;
+}

@@ -11,6 +11,8 @@ const PORT = 3000;
 const RECIPES_BLOB_KEY = 'web-recipes.json';
 // The path to your local JSON file.
 const RECIPES_FILE_PATH = path.join(__dirname, 'data', 'recipes.json');
+const LOGIN_LOGS_BLOB_KEY = 'web-login-logs.json';
+const LOGIN_LOGS_FILE_PATH = path.join(__dirname, 'data', 'login-logs.json');
 
 // --- Authentication Middleware ---
 const auth = (req, res, next) => {
@@ -26,8 +28,13 @@ const auth = (req, res, next) => {
     res.setHeader('WWW-Authenticate', 'Basic realm="example"');
     return res.status(401).send('Authentication required.');
   }
-  
+
   // User is authenticated
+  // Log the login time asynchronously
+  logLogin(credentials.name).catch(error => {
+    console.error(`Failed to log login for ${credentials.name}:`, error);
+  });
+
   next();
 };
 
@@ -86,6 +93,58 @@ const writeRecipesToBlob = async (recipes) => {
     });
 };
 
+// --- Vercel Blob Storage Functions for Login Logs ---
+
+const readLoginLogsFromBlob = async (retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const blob = await head(LOGIN_LOGS_BLOB_KEY);
+            const cacheBuster = `?v=${Date.now()}`;
+            const response = await fetch(`${blob.url}${cacheBuster}`);
+
+            if (response.ok) {
+                return await response.json();
+            }
+            console.error(`Attempt ${i + 1}: Error fetching login logs blob: ${response.statusText}`);
+        } catch (error) {
+            if (error.constructor.name === 'BlobNotFoundError') {
+                console.log('Login logs blob not found, returning empty object.');
+                return {};
+            }
+            console.error(`Attempt ${i + 1}: Error reading login logs from Vercel Blob:`, error);
+        }
+        if (i < retries - 1) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    console.error('Failed to read login logs from Vercel Blob after all retries.');
+    return {};
+};
+
+const writeLoginLogsToBlob = async (logs) => {
+    const body = JSON.stringify(logs, null, 2);
+    await put(LOGIN_LOGS_BLOB_KEY, body, {
+        access: 'public',
+        addRandomSuffix: false,
+        allowOverwrite: true,
+    });
+};
+
+const readLoginLogsFromLocalFile = async () => {
+    try {
+        const data = await fs.readFile(LOGIN_LOGS_FILE_PATH, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            return {}; // File doesn't exist, return empty object
+        }
+        throw error;
+    }
+};
+
+const writeLoginLogsToLocalFile = async (logs) => {
+    await fs.writeFile(LOGIN_LOGS_FILE_PATH, JSON.stringify(logs, null, 2), 'utf8');
+};
 // --- Local File Storage Functions ---
 
 const readRecipesFromLocalFile = async () => {
@@ -111,6 +170,31 @@ const isVercel = process.env.VERCEL_ENV === 'production';
 
 const readRecipes = isVercel ? readRecipesFromBlob : readRecipesFromLocalFile;
 const writeRecipes = isVercel ? writeRecipesToBlob : writeRecipesToLocalFile;
+
+const readLoginLogs = isVercel ? readLoginLogsFromBlob : readLoginLogsFromLocalFile;
+const writeLoginLogs = isVercel ? writeLoginLogsToBlob : writeLoginLogsToLocalFile;
+
+const logLogin = async (username) => {
+    const logs = await readLoginLogs();
+    const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'Europe/Zagreb' // Timezone for Croatia
+    };
+    const croatianTime = new Date().toLocaleString('hr-HR', options);
+    logs[username] = croatianTime;
+    await writeLoginLogs(logs);
+};
+
+app.get('/api/last-logins', async (req, res) => {
+    const logs = await readLoginLogs();
+    res.json(logs);
+});
 
 /**
  * A robust function to handle read-modify-write operations, preventing race conditions.

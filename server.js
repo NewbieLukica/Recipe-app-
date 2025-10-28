@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
 const { put, head } = require('@vercel/blob');
+const basicAuth = require('basic-auth');
 
 const app = express();
 const PORT = 3000;
@@ -10,6 +11,25 @@ const PORT = 3000;
 const RECIPES_BLOB_KEY = 'web-recipes.json';
 // The path to your local JSON file.
 const RECIPES_FILE_PATH = path.join(__dirname, 'data', 'recipes.json');
+
+// --- Authentication Middleware ---
+const auth = (req, res, next) => {
+  const credentials = basicAuth(req);
+  const validUsers = ['luka', 'nina'];
+  const validPassword = '2923';
+
+  if (
+    !credentials ||
+    !validUsers.includes(credentials.name) ||
+    credentials.pass !== validPassword
+  ) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="example"');
+    return res.status(401).send('Authentication required.');
+  }
+  
+  // User is authenticated
+  next();
+};
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -121,6 +141,9 @@ const performLockedUpdate = async (updateFunction) => {
 
     throw new Error("Failed to update recipes due to high concurrency. Please try again.");
 };
+
+// Apply authentication to all routes below this line
+app.use(auth);
 
 app.get('/api/recipes', async (req, res) => {
     try {

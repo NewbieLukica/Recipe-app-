@@ -12,6 +12,7 @@
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
     "@vercel/blob": "^2.0.0",
+    "basic-auth": "^2.0.1",
     "express": "^4.19.2"
   }
 }

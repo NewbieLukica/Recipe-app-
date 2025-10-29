@@ -3,10 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('add-recipe-form');
     let allRecipes = []; 
     let displayedRecipes = []; 
+    const linkInput = document.getElementById('link');
+    const thumbnailInput = document.getElementById('thumbnail');
 
     // Modal elements
     const editModal = document.getElementById('edit-modal');
     const editForm = document.getElementById('edit-recipe-form');
+    const editLinkInput = document.getElementById('edit-link');
+    const editThumbnailInput = document.getElementById('edit-thumbnail');
     const closeModalButton = document.querySelector('.close-button');
 
     // Custom Recipe Modal elements
@@ -78,6 +82,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return '';
     };
 
+    const getYouTubeVideoId = (url) => {
+        if (!url) return null;
+        // This regex covers various YouTube URL formats (youtube.com/watch, youtu.be/, /embed/, etc.)
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+
+        if (match && match[2].length === 11) {
+            return match[2];
+        } else {
+            return null;
+        }
+    };
+
+    const handleLinkInputChange = () => {
+        const videoId = getYouTubeVideoId(linkInput.value);
+        if (videoId) {
+            thumbnailInput.value = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        }
+    };
+
+    const handleEditLinkInputChange = () => {
+        const videoId = getYouTubeVideoId(editLinkInput.value);
+        if (videoId) {
+            editThumbnailInput.value = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        }
+    };
+
 
     const displayRecipes = (recipes) => {
         recipeGrid.innerHTML = ''; // Clear existing recipes
@@ -94,10 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCustom = 'ingredients' in recipe;
             const linkContent = !isCustom && recipe.link ? `href="${recipe.link}" target="_blank" rel="noopener noreferrer"` : 'href="#"';
             const platformIcon = getPlatformIcon(recipe.link);
+            const thumbnailSrc = recipe.thumbnail || 'https://via.placeholder.com/300x200?text=No+Image';
 
             card.innerHTML = `
                 <a ${linkContent} class="recipe-image-wrapper" ${isCustom ? `data-id="${recipe.id}" data-action="view-custom"` : ''}>
-                    <img src="${recipe.thumbnail}" alt="${recipe.title}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+Not+Found';">
+                    <img src="${thumbnailSrc}" alt="${recipe.title}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+Not+Found';">
                     <div class="action-icon edit-icon" data-id="${recipe.id}" title="Edit Recipe">&#9998;</div> <!-- Pencil icon -->
                     <div class="action-icon delete-icon" data-id="${recipe.id}" title="Delete Recipe">&#10006;</div> <!-- X icon -->
                 </a>
@@ -176,6 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const addRecipe = async (event) => {
         event.preventDefault();
         const newRecipeData = Object.fromEntries(new FormData(form).entries());
+        if (!newRecipeData.thumbnail) {
+            delete newRecipeData.thumbnail;
+        }
         const tempId = Date.now(); // Create a temporary ID for optimistic update
         const newRecipe = { id: tempId, ...newRecipeData };
 
@@ -207,6 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const addCustomRecipe = async (event) => {
         event.preventDefault();
         const newRecipeData = Object.fromEntries(new FormData(customRecipeForm).entries());
+        if (!newRecipeData.thumbnail) {
+            delete newRecipeData.thumbnail;
+        }
         const tempId = Date.now();
         const newRecipe = { id: tempId, ...newRecipeData };
 
@@ -316,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(editForm);
         const id = formData.get('id');
         let updatedRecipe = Object.fromEntries(formData.entries());
-
+        
         if (updatedRecipe.ingredients === '') {
             delete updatedRecipe.ingredients;
         } else {
@@ -324,6 +362,10 @@ document.addEventListener('DOMContentLoaded', () => {
             delete updatedRecipe.category;
         }
         
+        if (!updatedRecipe.thumbnail) {
+            updatedRecipe.thumbnail = ''; // Ensure it's explicitly cleared if empty
+        }
+
         // Optimistic UI update
         const recipeIndex = allRecipes.findIndex(r => r.id === parseInt(id, 10));
         if (recipeIndex !== -1) {
@@ -353,6 +395,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     form.addEventListener('submit', addRecipe);
+    linkInput.addEventListener('input', handleLinkInputChange);
+    editLinkInput.addEventListener('input', handleEditLinkInputChange);
     editForm.addEventListener('submit', handleEditSubmit);
     closeModalButton.addEventListener('click', closeEditModal);
     openCustomRecipeBtn.addEventListener('click', () => customRecipeModal.style.display = 'flex');

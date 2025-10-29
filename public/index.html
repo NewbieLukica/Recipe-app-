@@ -27,7 +27,7 @@
             <form id="add-recipe-form">
                 <input type="text" id="title" name="title" placeholder="Recipe Title" required>
                 <input type="url" id="link" name="link" placeholder="Link to Recipe (e.g., YouTube, TikTok)">
-                <input type="url" id="thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image" required>
+                <input type="url" id="thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image">
                 <select id="category" name="category" required>
                     <option value="" disabled selected>Select a Category</option>
                     <option value="lunch">Lunch</option>
@@ -76,7 +76,7 @@
                 <form id="edit-recipe-form">
                     <input type="hidden" id="edit-id" name="id">
                     <input type="text" id="edit-title" name="title" placeholder="Recipe Name" required>
-                    <input type="url" id="edit-thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image" required>
+                    <input type="url" id="edit-thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image">
 
                     <div class="form-field-group" data-recipe-type="link">
                         <input type="url" id="edit-link" name="link" placeholder="Link to Recipe">
@@ -105,7 +105,7 @@
                 <h2>Add Your Custom Recipe</h2>
                 <form id="custom-recipe-form">
                     <input type="text" id="custom-title" name="title" placeholder="Recipe Name" required>
-                    <input type="url" id="custom-thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image" required>
+                    <input type="url" id="custom-thumbnail" name="thumbnail" placeholder="Link to Thumbnail Image">
                     <textarea id="custom-ingredients" name="ingredients" placeholder="Enter ingredients and steps..." rows="8" required></textarea>
                     <button type="submit">Save Custom Recipe</button>
                 </form>
